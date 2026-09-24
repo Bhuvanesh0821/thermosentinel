@@ -27,7 +27,7 @@ with notifications, voice commands and an investigation workspace.
 | [API.md](API.md) | Every endpoint, envelopes, error codes, real-time streams |
 | [docs/intelligence-methodology.md](docs/intelligence-methodology.md) | Clustering, persistence, score, classifier, alert rules |
 | [docs/data-sources.md](docs/data-sources.md) | Sources, India boundary, licences, provenance |
-| [docs/stage-2-report.md](docs/stage-2-report.md) · [docs/stage-1-report.md](docs/stage-1-report.md) | Verification reports |
+| [docs/stage-3-report.md](docs/stage-3-report.md) · [docs/stage-2-report.md](docs/stage-2-report.md) · [docs/stage-1-report.md](docs/stage-1-report.md) | Verification reports |
 
 ---
 
