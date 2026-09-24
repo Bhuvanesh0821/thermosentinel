@@ -60,6 +60,19 @@ def _where(
     return w
 
 
+def incident_breakdown(conn: Connection, *, statuses: list[str] | None, min_priority: str | None, **filters) -> dict:
+    """Counts by priority and by event class for the same filters as the incident list (for charts)."""
+    w = _where(statuses, min_priority, **filters)
+    by_priority = {r[0]: r[1] for r in conn.execute(text(f"SELECT i.priority, count(*) FROM incidents i {w.sql} GROUP BY 1"), w.params)}
+    by_class = [
+        {"classification": r[0], "label": CLASSIFICATION_LABELS.get(r[0], r[0]), "count": r[1]}
+        for r in conn.execute(
+            text(f"SELECT i.classification, count(*) FROM incidents i {w.sql} GROUP BY 1 ORDER BY 2 DESC"), w.params
+        )
+    ]
+    return {"by_priority": by_priority, "by_classification": by_class}
+
+
 def list_incidents(
     conn: Connection, *, statuses: list[str] | None, min_priority: str | None, limit: int, offset: int, **filters
 ) -> tuple[list[dict], int]:
@@ -166,6 +179,20 @@ def _alert_where(statuses, min_severity, rule=None, q=None, hours=None) -> Where
     if hours:
         w.add("a.last_triggered_at >= now() - make_interval(hours => :hours)", hours=hours)
     return w
+
+
+def alert_breakdown(conn: Connection, *, statuses, min_severity, rule=None, q=None, hours=None) -> dict:
+    """Counts by severity and by fired rule for the same filters as the alert list (for charts)."""
+    w = _alert_where(statuses, min_severity, rule, q, hours)
+    by_severity = {r[0]: r[1] for r in conn.execute(text(f"SELECT a.severity, count(*) FROM alerts a {w.sql} GROUP BY 1"), w.params)}
+    by_rule = {
+        r[0]: r[1]
+        for r in conn.execute(
+            text(f"SELECT r.rule, count(*) FROM alerts a CROSS JOIN LATERAL unnest(a.rules) AS r(rule) {w.sql} GROUP BY 1"),
+            w.params,
+        )
+    }
+    return {"by_severity": by_severity, "by_rule": by_rule}
 
 
 def list_alerts(

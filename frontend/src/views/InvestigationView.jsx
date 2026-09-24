@@ -3,8 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, BellRing, Check, ExternalLink, FileSearch, MapPin } from 'lucide-react';
 import { api } from '../api/client.js';
 import DetectionHistory from '../components/charts/DetectionHistory.jsx';
+import TimeSeriesChart, { Legend } from '../components/charts/TimeSeriesChart.jsx';
 import { PersistenceBadge, PriorityBadge, StatusBadge } from '../components/common/Badges.jsx';
-import { Badge, Button, EmptyState, ErrorState, KeyValue, SkeletonRows } from '../components/common/ui.jsx';
+import { Badge, Button, EmptyState, ErrorState, KeyValue, Segmented, SkeletonRows } from '../components/common/ui.jsx';
 import InvestigationMap from '../components/map/InvestigationMap.jsx';
 import { RULE_LABELS } from '../components/panels/AlertList.jsx';
 import { Factors, LandCover } from '../components/panels/ClusterDetail.jsx';
@@ -18,6 +19,24 @@ import v from './InvestigationView.module.css';
 const STRENGTH_TONE = { high: 'ok', medium: 'accent', low: 'idle' };
 const ALERT_TONE = { open: 'err', acknowledged: 'warn', resolved: 'ok' };
 const OBS_PAGE = 100;
+const DAILY_SERIES = [
+  { key: 'night', label: 'Night', color: '#2a78d6' },
+  { key: 'day_count', label: 'Day', color: '#eb6834' },
+];
+
+/** One row per UTC day from first to last detection; days without a detection of this event are 0. */
+function dailySeries(daily) {
+  if (!daily.length) return [];
+  const byDay = Object.fromEntries(daily.map((d) => [d.day, d]));
+  const out = [];
+  const end = new Date(`${daily.at(-1).day}T00:00:00Z`);
+  for (let t = new Date(`${daily[0].day}T00:00:00Z`); t <= end; t = new Date(t.getTime() + 86400000)) {
+    const key = t.toISOString().slice(0, 10);
+    const d = byDay[key];
+    out.push({ day: key, night: d ? d.night : 0, day_count: d ? d.detections - d.night : 0 });
+  }
+  return out;
+}
 
 function Card({ title, aside, children, className = '' }) {
   return (
@@ -59,6 +78,7 @@ export default function InvestigationView() {
   const classes = useApi('/api/landcover/classes', null, { live: false });
   const [busy, setBusy] = useState(false);
   const [obsShown, setObsShown] = useState(OBS_PAGE);
+  const [dailyView, setDailyView] = useState('chart');
 
   if (loading) {
     return (
@@ -210,36 +230,64 @@ export default function InvestigationView() {
           <Card title="Detection history" aside={<span className={s.muted}>FRP per detection · UTC</span>}>
             <DetectionHistory observations={observations} />
           </Card>
-          <Card title="Daily activity" aside={<span className={s.muted}>{daily.length} day(s)</span>}>
-            <div className={v.scrollTable}>
-              <table className={v.table}>
-                <thead>
-                  <tr>
-                    <th>Date (UTC)</th>
-                    <th className={v.num}>Detections</th>
-                    <th className={v.num}>Night</th>
-                    <th className={v.num}>Max FRP</th>
-                    <th className={v.num}>Mean FRP</th>
-                    <th>Satellites</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {daily
-                    .slice()
-                    .reverse()
-                    .map((d) => (
-                      <tr key={d.day}>
-                        <td className="mono">{d.day}</td>
-                        <td className={`${v.num} mono`}>{d.detections}</td>
-                        <td className={`${v.num} mono`}>{d.night}</td>
-                        <td className={`${v.num} mono`}>{fmtNum(d.max_frp)}</td>
-                        <td className={`${v.num} mono`}>{fmtNum(d.mean_frp)}</td>
-                        <td className={s.muted}>{(d.satellites || []).filter(Boolean).join(', ')}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+          <Card
+            title="Daily activity"
+            aside={
+              <Segmented
+                label="Daily activity view"
+                value={dailyView}
+                onChange={setDailyView}
+                options={[
+                  { value: 'chart', label: 'Chart' },
+                  { value: 'table', label: 'Table' },
+                ]}
+              />
+            }
+          >
+            {dailyView === 'chart' ? (
+              <>
+                <Legend series={DAILY_SERIES} />
+                <TimeSeriesChart
+                  data={dailySeries(daily)}
+                  series={DAILY_SERIES}
+                  height={180}
+                  label="Detections of this event per UTC day, day and night"
+                />
+                <div className={s.muted}>
+                  Detected on {daily.length} day(s) between {daily[0]?.day} and {daily.at(-1)?.day}
+                </div>
+              </>
+            ) : (
+              <div className={v.scrollTable}>
+                <table className={v.table}>
+                  <thead>
+                    <tr>
+                      <th>Date (UTC)</th>
+                      <th className={v.num}>Detections</th>
+                      <th className={v.num}>Night</th>
+                      <th className={v.num}>Max FRP</th>
+                      <th className={v.num}>Mean FRP</th>
+                      <th>Satellites</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {daily
+                      .slice()
+                      .reverse()
+                      .map((d) => (
+                        <tr key={d.day}>
+                          <td className="mono">{d.day}</td>
+                          <td className={`${v.num} mono`}>{d.detections}</td>
+                          <td className={`${v.num} mono`}>{d.night}</td>
+                          <td className={`${v.num} mono`}>{fmtNum(d.max_frp)}</td>
+                          <td className={`${v.num} mono`}>{fmtNum(d.mean_frp)}</td>
+                          <td className={s.muted}>{(d.satellites || []).filter(Boolean).join(', ')}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </Card>
         </div>
 

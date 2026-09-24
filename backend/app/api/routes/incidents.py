@@ -30,6 +30,7 @@ def get_incidents(
     format: Literal["json", "geojson"] = "json",
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
+    breakdown: bool = Query(False, description="Include counts by priority and event class for these filters"),
 ):
     statuses = parse_csv_list(status, STATUSES, "status")
     filters = dict(
@@ -50,7 +51,8 @@ def get_incidents(
         return cached_ok("incidents", dict(filters, bbox=bbox, statuses=statuses, min_priority=min_priority), build)
     with connection() as conn:
         rows, total = repo.list_incidents(conn, statuses=statuses, min_priority=min_priority, limit=limit, offset=offset, **filters)
-    return ok(rows, {"total": total, "count": len(rows), "limit": limit, "offset": offset})
+        extra = {"breakdown": repo.incident_breakdown(conn, statuses=statuses, min_priority=min_priority, **filters)} if breakdown else {}
+    return ok(rows, {"total": total, "count": len(rows), "limit": limit, "offset": offset, **extra})
 
 
 @router.get("/incidents/{incident_id}", summary="Incident detail")

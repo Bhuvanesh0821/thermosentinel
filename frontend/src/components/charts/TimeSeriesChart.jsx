@@ -13,7 +13,12 @@ function niceMax(v) {
   return [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10].map((m) => m * p).find((m) => m >= v);
 }
 
-const dayLabel = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', timeZone: 'UTC' });
+// UTC-day keys ('2026-09-16') or full timestamps both parse; labels are always UTC.
+const toDate = (v) => new Date(/^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T00:00:00Z` : v);
+const dayLabel = (v) => toDate(v).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', timeZone: 'UTC' });
+const dayTitle = (v) => `${dayLabel(v)} ${toDate(v).getUTCFullYear()} (UTC)`;
+export const hourLabel = (v) => toDate(v).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+export const hourTitle = (v) => `${dayLabel(v)}, ${hourLabel(v)} UTC`;
 
 // Bar with only the data end (top) rounded; the baseline end stays square.
 function topRoundedBar(x, y, w, h, r) {
@@ -26,7 +31,18 @@ function topRoundedBar(x, y, w, h, r) {
  * 2px line (gaps where a value is null). Days before the first stored FIRMS detection
  * (`covered === false`) are hatched so "no data" never reads as "zero activity".
  */
-export default function TimeSeriesChart({ data, series, type = 'bar', height = 200, unit = '', valueFormat = fmtInt, label }) {
+export default function TimeSeriesChart({
+  data,
+  series,
+  type = 'bar',
+  height = 200,
+  unit = '',
+  valueFormat = fmtInt,
+  label,
+  xKey = 'day',
+  xLabel = dayLabel,
+  xTitle = dayTitle,
+}) {
   const [ref, width] = useElementWidth();
   const [hover, setHover] = useState(null);
   const innerW = Math.max(0, width - M.left - M.right);
@@ -84,7 +100,7 @@ export default function TimeSeriesChart({ data, series, type = 'bar', height = 2
           <g transform={`translate(${M.left},${M.top})`}>
             {data.map((d, i) =>
               d.covered === false ? (
-                <rect key={`nd-${d.day}`} x={i * band} y={0} width={band} height={innerH} fill="url(#ts-nodata)" opacity="0.7" />
+                <rect key={`nd-${d[xKey]}`} x={i * band} y={0} width={band} height={innerH} fill="url(#ts-nodata)" opacity="0.7" />
               ) : null,
             )}
             {ticks.map((t) => (
@@ -109,14 +125,14 @@ export default function TimeSeriesChart({ data, series, type = 'bar', height = 2
                   const x = xCenter(i) - barW / 2;
                   return top ? (
                     <path
-                      key={`${d.day}-${sr.key}`}
+                      key={`${d[xKey]}-${sr.key}`}
                       d={topRoundedBar(x, y1, barW, h, 4)}
                       fill={sr.color}
                       opacity={hover == null || hover === i ? 1 : 0.55}
                     />
                   ) : (
                     <rect
-                      key={`${d.day}-${sr.key}`}
+                      key={`${d[xKey]}-${sr.key}`}
                       x={x}
                       y={y1}
                       width={barW}
@@ -148,14 +164,14 @@ export default function TimeSeriesChart({ data, series, type = 'bar', height = 2
             <line className={s.baseline} x1={0} x2={innerW} y1={innerH} y2={innerH} />
             {data.map((d, i) =>
               i % labelEvery === 0 ? (
-                <text key={`x-${d.day}`} className={s.tick} x={xCenter(i)} y={innerH + 16} textAnchor="middle">
-                  {dayLabel(d.day)}
+                <text key={`x-${d[xKey]}`} className={s.tick} x={xCenter(i)} y={innerH + 16} textAnchor="middle">
+                  {xLabel(d[xKey])}
                 </text>
               ) : null,
             )}
             {data.map((d, i) => (
               <rect
-                key={`hit-${d.day}`}
+                key={`hit-${d[xKey]}`}
                 x={i * band}
                 y={0}
                 width={band}
@@ -172,7 +188,7 @@ export default function TimeSeriesChart({ data, series, type = 'bar', height = 2
         <Tooltip
           x={Math.min(Math.max(M.left + xCenter(hover), 80), width - 80)}
           y={M.top + 4}
-          title={`${dayLabel(hoverRow.day)} ${new Date(`${hoverRow.day}T00:00:00Z`).getUTCFullYear()} (UTC)`}
+          title={xTitle(hoverRow[xKey])}
           value={
             hoverRow.covered === false
               ? 'No FIRMS data stored'

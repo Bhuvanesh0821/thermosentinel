@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Search, Siren } from 'lucide-react';
+import BarBreakdown from '../components/charts/BarBreakdown.jsx';
 import FilterBar from '../components/common/FilterBar.jsx';
+import { Card } from '../components/panels/ActivityRow.jsx';
 import { ClassificationTag, PersistenceBadge, PriorityBadge } from '../components/common/Badges.jsx';
 import { Badge, Button, EmptyState, ErrorState, Segmented, SkeletonRows } from '../components/common/ui.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useQueryFilters } from '../hooks/useQueryFilters.js';
 import { filterParams, useApp } from '../state/AppContext.jsx';
-import { PRIORITY } from '../utils/constants.js';
+import { CLASSIFICATION, PRIORITY, PRIORITY_ORDER } from '../utils/constants.js';
 import { fmtDistance, fmtInt, fmtNum, fmtRelative, fmtUtc, titleCase } from '../utils/format.js';
 import s from './page.module.css';
 
@@ -23,7 +25,7 @@ const PAGE = 50;
 export default function IncidentsView() {
   useQueryFilters();
   const navigate = useNavigate();
-  const { filters, mapBounds, setSelection, focusMap } = useApp();
+  const { filters, setFilters, mapBounds, setSelection, focusMap } = useApp();
   const [status, setStatus] = useState('active,monitoring');
   const [query, setQuery] = useState('');
   const [q, setQ] = useState('');
@@ -39,6 +41,7 @@ export default function IncidentsView() {
     q: q.length >= 2 ? q : undefined,
     limit: PAGE,
     offset,
+    breakdown: true,
   };
   useEffect(() => setOffset(0), [status, q, filters, mapBounds]);
   const { data, meta, error, loading, refreshing, reload } = useApi('/api/incidents', params);
@@ -62,12 +65,58 @@ export default function IncidentsView() {
       </div>
       <div className={s.stack}>
         <FilterBar fields={['severity', 'event', 'facility', 'persistence', 'area']} />
+        {meta?.breakdown && meta.total > 0 && (
+          <div className={s.grid2}>
+            <Card title="By priority" sub={`${fmtInt(meta.total)} incidents matching the filters`}>
+              <BarBreakdown
+                rows={PRIORITY_ORDER.map((p) => ({
+                  key: p,
+                  text: PRIORITY[p].label,
+                  label: (
+                    <>
+                      <span style={{ width: 8, height: 8, borderRadius: 2, background: PRIORITY[p].color, flex: 'none' }} />
+                      {PRIORITY[p].label}
+                    </>
+                  ),
+                  value: meta.breakdown.by_priority[p] || 0,
+                  color: PRIORITY[p].color,
+                }))}
+              />
+            </Card>
+            <Card title="By event type" sub="click to filter">
+              <BarBreakdown
+                rows={meta.breakdown.by_classification.map((c) => ({
+                  key: c.classification,
+                  text: c.label,
+                  label: (
+                    <>
+                      <span
+                        style={{ width: 8, height: 8, borderRadius: 2, background: CLASSIFICATION[c.classification]?.color, flex: 'none' }}
+                      />
+                      {CLASSIFICATION[c.classification]?.short || c.label}
+                    </>
+                  ),
+                  value: c.count,
+                }))}
+                active={filters.classification.length === 1 ? filters.classification[0] : null}
+                onSelect={(k) => setFilters((f) => ({ ...f, classification: k ? [k] : [] }))}
+              />
+            </Card>
+          </div>
+        )}
         <div className={`${s.card} ${s.tableCard}`} data-refreshing={refreshing}>
           <div className={s.tableToolbar}>
             <Segmented options={STATUS} value={status} onChange={setStatus} label="Incident status" />
             <label className={s.searchWrap}>
               <Search size={14} />
-              <input className={s.search} type="search" placeholder="Search incident titles…" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search incidents" />
+              <input
+                className={s.search}
+                type="search"
+                placeholder="Search incident titles…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search incidents"
+              />
             </label>
             {meta && <span className={s.muted}>{fmtInt(meta.total)} incidents</span>}
           </div>
@@ -99,7 +148,12 @@ export default function IncidentsView() {
               </thead>
               <tbody>
                 {data.map((inc) => (
-                  <tr key={inc.id} onClick={() => navigate(`/investigation/${inc.id}`)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate(`/investigation/${inc.id}`)}>
+                  <tr
+                    key={inc.id}
+                    onClick={() => navigate(`/investigation/${inc.id}`)}
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && navigate(`/investigation/${inc.id}`)}
+                  >
                     <td className={`mono ${s.nowrap}`} style={{ boxShadow: `inset 3px 0 0 ${PRIORITY[inc.priority]?.color}` }}>
                       {inc.reference}
                     </td>

@@ -244,6 +244,11 @@ def test_stage2_endpoints(incident_ready):
         al = alerts["data"][0]
         assert {"alert_id", "incident_id", "severity", "status", "title", "description", "location", "facility", "source",
                 "created_at", "acknowledged_at", "resolved_at", "rules"} <= set(al)
+        bd = client.get("/api/alerts", params={"status": "open", "breakdown": "true"}).json()["meta"]["breakdown"]
+        assert sum(bd["by_severity"].values()) == alerts["meta"]["total"]
+        assert bd["by_rule"].get("industrial_proximity", 0) >= 1
+        ib = client.get("/api/incidents", params={"breakdown": "true"}).json()["meta"]["breakdown"]
+        assert sum(ib["by_priority"].values()) == sum(c["count"] for c in ib["by_classification"]) >= 1
         detail = client.get(f"/api/alerts/{al['id']}").json()["data"]
         assert detail["evidence"]["rules"]
 

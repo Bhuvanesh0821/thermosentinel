@@ -1,5 +1,6 @@
 import FilterBar from '../components/common/FilterBar.jsx';
 import ThermalMap from '../components/map/ThermalMap.jsx';
+import ActivityRow from '../components/panels/ActivityRow.jsx';
 import KpiStrip from '../components/panels/KpiStrip.jsx';
 import RightRail from '../components/panels/RightRail.jsx';
 import SourceHealthStrip from '../components/panels/SourceHealthStrip.jsx';
@@ -18,6 +19,9 @@ export default function DashboardView() {
       </div>
       <div className={s.map}>
         <ThermalMap />
+      </div>
+      <div className={s.activity}>
+        <ActivityRow />
       </div>
       <div className={s.health}>
         <SourceHealthStrip />

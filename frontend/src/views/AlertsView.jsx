@@ -4,6 +4,8 @@ import { BellRing, Check, ChevronDown, CircleCheck, FileSearch, Search } from 'l
 import { api } from '../api/client.js';
 import { PriorityBadge } from '../components/common/Badges.jsx';
 import { Badge, Button, EmptyState, ErrorState, Segmented, Select, SkeletonRows } from '../components/common/ui.jsx';
+import BarBreakdown from '../components/charts/BarBreakdown.jsx';
+import { Card } from '../components/panels/ActivityRow.jsx';
 import { RULE_LABELS } from '../components/panels/AlertList.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useApp } from '../state/AppContext.jsx';
@@ -92,8 +94,10 @@ export default function AlertsView() {
     q: q.length >= 2 ? q : undefined,
     limit: PAGE,
     offset,
+    breakdown: true,
   });
   const counts = meta?.by_status || {};
+  const bd = meta?.breakdown;
 
   async function act(alert, action) {
     setBusy(alert.id);
@@ -130,6 +134,36 @@ export default function AlertsView() {
           </p>
         </div>
       </div>
+      {bd && meta.total > 0 && (
+        <div className={s.grid2} style={{ marginBottom: 12 }}>
+          <Card title="By severity" sub={`${fmtInt(meta.total)} alerts matching the filters`}>
+            <BarBreakdown
+              rows={PRIORITY_ORDER.map((p) => ({
+                key: p,
+                text: PRIORITY[p].label,
+                label: (
+                  <>
+                    <span style={{ width: 8, height: 8, borderRadius: 2, background: PRIORITY[p].color, flex: 'none' }} />
+                    {PRIORITY[p].label}
+                  </>
+                ),
+                value: bd.by_severity[p] || 0,
+                color: PRIORITY[p].color,
+              }))}
+            />
+          </Card>
+          <Card title="Rules that fired" sub="an alert can meet several rules · click to filter">
+            <BarBreakdown
+              rows={Object.entries(RULE_LABELS)
+                .map(([key, label]) => ({ key, text: label, label, value: bd.by_rule[key] || 0 }))
+                .sort((x, y) => y.value - x.value)}
+              total={meta.total}
+              active={rule}
+              onSelect={setRule}
+            />
+          </Card>
+        </div>
+      )}
       <div className={`${s.card} ${s.tableCard}`} data-refreshing={refreshing}>
         <div className={s.tableToolbar}>
           <Segmented options={statusTabs} value={status} onChange={setStatus} label="Alert status" />

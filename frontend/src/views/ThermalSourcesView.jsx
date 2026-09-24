@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileSearch, Flame, MapPin } from 'lucide-react';
 import FilterBar from '../components/common/FilterBar.jsx';
 import { ClassificationTag, PersistenceBadge, PriorityBadge } from '../components/common/Badges.jsx';
-import { Button, EmptyState, ErrorState, Segmented, Select, SkeletonRows } from '../components/common/ui.jsx';
+import { Button, EmptyState, ErrorState, Meter, Segmented, Select, SkeletonRows } from '../components/common/ui.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useQueryFilters } from '../hooks/useQueryFilters.js';
 import { filterParams, useApp } from '../state/AppContext.jsx';
@@ -111,6 +111,16 @@ export default function ThermalSourcesView() {
                       <div className={s.muted}>
                         {c.persistence_detection_days ?? '—'} of {c.persistence_coverage_days ?? '—'} days
                       </div>
+                      {c.persistence_coverage_days > 0 && (
+                        <div style={{ width: 110, marginTop: 4 }}>
+                          <Meter
+                            value={c.persistence_detection_days || 0}
+                            max={c.persistence_coverage_days}
+                            color="#2a78d6"
+                            title={`Detected on ${c.persistence_detection_days} of ${c.persistence_coverage_days} days of FIRMS coverage`}
+                          />
+                        </div>
+                      )}
                     </td>
                     <td>
                       <ClassificationTag classification={c.classification} short />
