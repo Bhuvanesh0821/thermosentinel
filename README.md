@@ -2,6 +2,9 @@
 
 **AI-enabled geospatial industrial thermal intelligence for India** - Smart India Hackathon prototype.
 
+**Live:** https://thermosentinel.vercel.app · **API:** https://thermosentinel-api.onrender.com ·
+**API docs:** https://thermosentinel-api.onrender.com/api/docs
+
 ThermoSentinel ingests real NASA FIRMS satellite thermal detections, OpenStreetMap industrial
 infrastructure and ESA WorldCover land cover; clusters detections in space and time; relates them
 to refineries, flares, steel plants, power stations and mines with PostGIS; measures persistence;
