@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     admin_api_token: SecretStr | None = None
     auto_migrate: bool = True
     scheduler_enabled: bool = True
-    http_user_agent: str = "ThermoSentinel/0.1 (geospatial thermal intelligence prototype)"
+    http_user_agent: str = "ThermoSentinel/0.1 (+https://github.com/Bhuvanesh0821/thermosentinel)"
 
     # --- Database (Neon PostgreSQL + PostGIS) ----------------------------------
     database_url: SecretStr | None = None
@@ -150,6 +150,8 @@ class Settings(BaseSettings):
     # --- Search -------------------------------------------------------------------
     geocoder_url: str = "https://nominatim.openstreetmap.org/search"
     geocoder_enabled: bool = True
+    # Fallback geocoder (OSM-based) used when Nominatim refuses or fails - e.g. shared cloud IPs.
+    geocoder_fallback_url: str = "https://photon.komoot.io/api/"
 
     # --- Retention (keeps Neon free-tier storage in check) ------------------------
     observation_retention_days: int = Field(120, ge=7)

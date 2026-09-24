@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 import threading
 import time
-from functools import lru_cache
 
 import httpx
 from sqlalchemy import text
@@ -108,30 +107,71 @@ def search_alerts(conn: Connection, q: str, limit: int) -> list[dict]:
     ]
 
 
-@lru_cache(maxsize=512)
-def _geocode(q: str) -> tuple:
-    global _last_geocode
-    settings = get_settings()
+_geocode_cache: dict[str, tuple] = {}
+_GEOCODE_CACHE_MAX = 512
+
+
+def _nominatim(settings, q: str) -> tuple:
     bbox = settings.bbox
-    with _geocode_lock:  # Nominatim policy: at most 1 request per second
+    r = httpx.get(
+        settings.geocoder_url,
+        params={
+            "q": q, "format": "jsonv2", "limit": 5, "bounded": 1,
+            "viewbox": f"{bbox.west},{bbox.north},{bbox.east},{bbox.south}",
+        },
+        headers={"User-Agent": settings.http_user_agent},
+        timeout=10,
+    )
+    r.raise_for_status()
+    return tuple((float(x["lat"]), float(x["lon"]), x.get("display_name", q), x.get("addresstype") or x.get("type")) for x in r.json())
+
+
+def _photon(settings, q: str) -> tuple:
+    bbox = settings.bbox
+    r = httpx.get(
+        settings.geocoder_fallback_url,
+        params={"q": q, "limit": 5, "lang": "en", "bbox": f"{bbox.west},{bbox.south},{bbox.east},{bbox.north}"},
+        headers={"User-Agent": settings.http_user_agent},
+        timeout=10,
+    )
+    r.raise_for_status()
+    out = []
+    for f in r.json().get("features", []):
+        props = f.get("properties", {})
+        lon, lat = f["geometry"]["coordinates"][:2]
+        parts = [props.get("name"), props.get("county"), props.get("state"), props.get("country")]
+        label = ", ".join(dict.fromkeys(p for p in parts if p)) or q
+        out.append((float(lat), float(lon), label, props.get("type")))
+    return tuple(out)
+
+
+def _geocode(q: str) -> tuple:
+    """Place lookup: Nominatim (1 request/s, per its usage policy), falling back to Photon.
+    Only successful answers are cached, so a transient refusal is retried next time."""
+    global _last_geocode
+    if q in _geocode_cache:
+        return _geocode_cache[q]
+    settings = get_settings()
+    from app.core.observability import record_failure
+
+    with _geocode_lock:
         wait = 1.05 - (time.monotonic() - _last_geocode)
         if wait > 0:
             time.sleep(wait)
         _last_geocode = time.monotonic()
-        try:
-            r = httpx.get(
-                settings.geocoder_url,
-                params={
-                    "q": q, "format": "jsonv2", "limit": 5, "bounded": 1,
-                    "viewbox": f"{bbox.west},{bbox.north},{bbox.east},{bbox.south}",
-                },
-                headers={"User-Agent": settings.http_user_agent},
-                timeout=10,
-            )
-            r.raise_for_status()
-            return tuple((float(x["lat"]), float(x["lon"]), x.get("display_name", q), x.get("addresstype") or x.get("type")) for x in r.json())
-        except (httpx.HTTPError, ValueError, KeyError):
-            return ()
+        result = None
+        for name, provider in (("nominatim", _nominatim), ("photon", _photon)):
+            try:
+                result = provider(settings, q)
+                break
+            except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+                record_failure("external_source", f"geocoder {name}: {type(exc).__name__}: {exc}")
+    if result is None:
+        return ()
+    if len(_geocode_cache) >= _GEOCODE_CACHE_MAX:
+        _geocode_cache.pop(next(iter(_geocode_cache)))
+    _geocode_cache[q] = result
+    return result
 
 
 def search_locations(q: str, limit: int) -> list[dict]:
