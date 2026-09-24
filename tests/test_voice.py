@@ -143,3 +143,9 @@ def test_clearing_filters_is_not_destructive():
 def test_nonsense_has_no_actionable_entities(text):
     c = P(text)
     assert not (c.targets or c.has_filters or c.place or c.basemap or c.incident_id or c.alert_id or c.page)
+
+
+@pytest.mark.parametrize("text", ["show mumbai high", "मुंबई हाई दिखाओ", "மும்பை ஹை காட்டு"])
+def test_place_names_win_over_filter_words(text):
+    c = P(text)
+    assert c.place == "Mumbai High" and c.priority is None

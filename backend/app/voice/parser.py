@@ -208,7 +208,12 @@ def parse(raw: str, lang: str | None = None) -> ParsedCommand:
     pages = sc.find_key(L.PAGES)
     cmd.page = pages[0] if pages else None
 
-    # 5. filters
+    # 5. places from the gazetteer, before single filter words, so "Mumbai High" / "मुंबई हाई" is a
+    #    place and not "Mumbai" + high priority (longest names first).
+    places = sc.find_key(L.PLACES)
+    cmd.place = places[0] if places else None
+
+    # 6. filters
     classes = sc.find_key(L.CLASSES)
     if "industrial" in classes:
         cmd.industrial = True
@@ -224,14 +229,11 @@ def parse(raw: str, lang: str | None = None) -> ParsedCommand:
         cmd.priority = sorted(prio, key=order.index)[0]
     sc.find_all(["priority", "प्राथमिकता", "प्रायोरिटी", "முன்னுரிமை", "priority wale"])
 
-    # 6. what is being asked about (sources before detections: "thermal source" vs "thermal")
+    # 7. what is being asked about (sources before detections: "thermal source" vs "thermal")
     for target in ("sources", "alerts", "incidents", "facilities", "detections"):
         if sc.find_all(L.TARGETS[target]):
             cmd.targets.append(target)
 
-    # 7. places from the gazetteer (longest names first, so "Mumbai High" beats "Mumbai")
-    places = sc.find_key(L.PLACES)
-    cmd.place = places[0] if places else None
 
     # 8. remaining verbs
     for verb in ("count", "zoom", "open", "show"):
