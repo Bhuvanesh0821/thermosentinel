@@ -14,6 +14,8 @@ def bucket_step(hours: int) -> tuple[str, int]:
         return "1 hour", 1
     if hours <= 48:
         return "2 hours", 2
+    if hours <= 72:
+        return "3 hours", 3
     if hours <= 168:
         return "6 hours", 6
     return "1 day", 24
@@ -34,18 +36,21 @@ def timeseries(conn: Connection, hours: int) -> dict:
                            CAST(:step AS interval)) AS bucket
             ),
             obs AS (
-                SELECT date_bin(CAST(:step AS interval), acquired_at, TIMESTAMPTZ '2000-01-01 00:00:00+00') AS bucket,
+                SELECT date_bin(CAST(:step AS interval), o.acquired_at, TIMESTAMPTZ '2000-01-01 00:00:00+00') AS bucket,
                        count(*) AS total,
-                       count(*) FILTER (WHERE daynight = 'N') AS night,
-                       count(*) FILTER (WHERE instrument = 'VIIRS') AS viirs,
-                       count(*) FILTER (WHERE instrument = 'MODIS') AS modis,
-                       max(frp) AS max_frp
-                  FROM thermal_observations
-                 WHERE acquired_at >= now() - make_interval(hours => :h)
+                       count(*) FILTER (WHERE o.daynight = 'N') AS night,
+                       count(*) FILTER (WHERE o.instrument = 'VIIRS') AS viirs,
+                       count(*) FILTER (WHERE o.instrument = 'MODIS') AS modis,
+                       count(*) FILTER (WHERE c.industrial_association) AS industrial,
+                       max(o.frp) AS max_frp
+                  FROM thermal_observations o
+                  LEFT JOIN thermal_clusters c ON c.id = o.cluster_id
+                 WHERE o.acquired_at >= now() - make_interval(hours => :h)
                  GROUP BY 1
             )
             SELECT b.bucket, coalesce(o.total, 0) AS total, coalesce(o.night, 0) AS night,
-                   coalesce(o.viirs, 0) AS viirs, coalesce(o.modis, 0) AS modis, o.max_frp
+                   coalesce(o.viirs, 0) AS viirs, coalesce(o.modis, 0) AS modis,
+                   coalesce(o.industrial, 0) AS industrial, o.max_frp
               FROM buckets b LEFT JOIN obs o USING (bucket)
              ORDER BY b.bucket
             """
