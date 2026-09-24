@@ -281,3 +281,23 @@ def test_stage2_endpoints(incident_ready):
         res = client.post(f"/api/alerts/{al['id']}/resolve", json={"note": "test"}).json()["data"]
         assert res["status"] == "resolved"
         assert client.get("/api/alerts/999999999").status_code == 404
+
+
+def test_incident_closes_when_event_no_longer_qualifies(incident_ready):
+    """Re-analysis that drops an event below the incident criteria closes its incident and
+    resolves its alert with the reason (instead of leaving a stale open incident)."""
+    from app.alerts.service import update_incidents_and_alerts
+    from app.db.engine import connection, transaction
+
+    with transaction() as conn:
+        conn.execute(text("UPDATE alerts SET status = 'open', resolved_at = NULL, resolution = NULL WHERE cluster_id = :c"),
+                     {"c": incident_ready})
+        # Re-analysis now says it is crop burning (a non-incident class).
+        conn.execute(text("UPDATE thermal_clusters SET classification = 'agricultural_burning' WHERE id = :c"), {"c": incident_ready})
+    stats = update_incidents_and_alerts([incident_ready])
+    with connection() as conn:
+        inc = conn.execute(text("SELECT status, classification FROM incidents WHERE cluster_id = :c"), {"c": incident_ready}).mappings().one()
+        al = conn.execute(text("SELECT status, resolution FROM alerts WHERE cluster_id = :c"), {"c": incident_ready}).mappings().one()
+    assert inc["status"] == "closed" and inc["classification"] == "agricultural_burning"
+    assert al["status"] == "resolved" and "no longer meets the incident criteria" in al["resolution"]
+    assert stats["alerts_resolved"] >= 1

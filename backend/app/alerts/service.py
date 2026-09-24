@@ -85,6 +85,46 @@ def resolve_closed_incident_alerts(conn) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def close_disqualified_incidents(conn, settings: Settings) -> list[dict]:
+    """Close open incidents whose event no longer qualifies after re-analysis (reclassified into a
+    non-incident class, score below INCIDENT_MIN_SCORE, or cluster merged/inactive). The incident
+    keeps its latest class and score, and its open alert is resolved with the reason."""
+    rows = conn.execute(
+        text(
+            """
+            WITH d AS (
+                SELECT i.id, c.classification, c.priority, c.risk_score
+                  FROM incidents i
+                  LEFT JOIN thermal_clusters c ON c.id = i.cluster_id
+                 WHERE i.status <> 'closed'
+                   AND (c.id IS NULL OR c.status <> 'active' OR c.classification IS NULL
+                        OR NOT (c.classification = ANY(CAST(:classes AS text[])))
+                        OR c.risk_score < :min_score)
+            ), upd AS (
+                UPDATE incidents i
+                   SET status = 'closed', closed_at = now(),
+                       classification = coalesce(d.classification, i.classification),
+                       priority = coalesce(d.priority, i.priority),
+                       risk_score = coalesce(d.risk_score, i.risk_score)
+                  FROM d
+                 WHERE i.id = d.id
+             RETURNING i.id, i.classification, i.risk_score
+            )
+            UPDATE alerts a
+               SET status = 'resolved', resolved_at = now(),
+                   resolution = 'Auto-resolved: after re-analysis the event no longer meets the incident criteria '
+                                || '(class ' || upd.classification || ', intelligence score '
+                                || round(upd.risk_score::numeric) || ')'
+              FROM upd
+             WHERE a.incident_id = upd.id AND a.status <> 'resolved'
+         RETURNING a.id, a.incident_id, a.severity, a.title
+            """
+        ),
+        {"classes": sorted(INCIDENT_CLASSES), "min_score": settings.incident_min_score},
+    ).mappings().all()
+    return [dict(r) for r in rows]
+
+
 def _upsert_incidents(conn, candidates, settings: Settings) -> list[dict]:
     out = []
     for c in candidates:
@@ -324,8 +364,9 @@ def update_incidents_and_alerts(cluster_ids: list[int], settings: Settings | Non
             else:
                 stats["alerts_updated"] += 1
 
+        disqualified = close_disqualified_incidents(conn, settings)
         stats["status_changes"] = refresh_incident_status(conn)
-        resolved = resolve_closed_incident_alerts(conn)
+        resolved = disqualified + resolve_closed_incident_alerts(conn)
         stats["alerts_resolved"] = len(resolved)
         create_in_app(conn, notify)
 
