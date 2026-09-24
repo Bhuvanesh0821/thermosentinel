@@ -18,6 +18,7 @@ import {
   firstSymbolLayer,
   hideBasemapBoundaries,
   loadBaseStyle,
+  raisePlaceLabels,
 } from './mapStyle.js';
 import { clusterTooltip, facilityPopup, hotspotPopup, landcoverPopup } from './popups.js';
 import LayerPanel from './LayerPanel.jsx';
@@ -198,6 +199,7 @@ export default function ThermalMap() {
       dataLayers()
         .filter((layer) => hasGlyphs || layer.type !== 'symbol')
         .forEach((layer) => map.addLayer(layer));
+      raisePlaceLabels(map);
       api
         .get('/api/map/boundary')
         .then(({ data }) => map.getSource('boundary')?.setData(data))

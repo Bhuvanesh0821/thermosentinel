@@ -120,6 +120,13 @@ function firstRoadLayer(map) {
   return map.getStyle().layers.find((l) => l['source-layer'] === 'transportation')?.id;
 }
 
+/** Keep place names (cities, states, countries, seas) readable above the data layers, as in Google Maps. */
+export function raisePlaceLabels(map) {
+  map.getStyle().layers.forEach((l) => {
+    if (l.type === 'symbol' && (l['source-layer'] === 'place' || l['source-layer'] === 'water_name')) map.moveLayer(l.id);
+  });
+}
+
 /** Raster basemaps (satellite, VIIRS) sit above the vector land/water fills, below roads and labels. */
 export function addRasterBasemaps(map, basemaps, beforeId) {
   const anchor = firstRoadLayer(map) || beforeId;
@@ -289,6 +296,8 @@ export function dataLayers() {
         'text-size': 10.5,
         'text-font': ['Noto Sans Bold'],
         'text-allow-overlap': true,
+        // Never push basemap place names (cities, states) out of the way.
+        'text-ignore-placement': true,
       },
       paint: { 'text-color': '#2E2470' },
     },
