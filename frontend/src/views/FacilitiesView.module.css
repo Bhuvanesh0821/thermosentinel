@@ -1,0 +1,112 @@
+.layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.breakdown {
+  padding: 14px;
+  position: sticky;
+  top: 0;
+}
+.cardTitle {
+  margin: 0 0 12px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.barRow {
+  display: grid;
+  grid-template-columns: 148px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  font-size: var(--fs-xs);
+}
+.barRow:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+.barRow[aria-pressed='true'] {
+  background: var(--accent-soft);
+}
+.barRow:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.barLabel {
+  display: flex;
+  align-items: center;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.barLabel .typeDot {
+  flex: none;
+}
+/* Horizontal bars: one series -> one colour; 4px rounded data-end, square at the baseline. */
+.barTrack {
+  height: 10px;
+  position: relative;
+}
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  background: var(--chart-series-1);
+  transition: width 0.3s var(--ease);
+}
+.barRow[aria-pressed='true'] .barFill {
+  background: var(--accent);
+}
+.barValue {
+  text-align: right;
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--divider);
+  flex-wrap: wrap;
+}
+.typeDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+.osm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .breakdown {
+    position: static;
+  }
+}

@@ -1,0 +1,3 @@
+-r requirements.txt
+pytest>=8.0
+pyshp>=2.3  # build-time only: reads Natural Earth shapefiles (data_pipeline/build_india_boundary.py)

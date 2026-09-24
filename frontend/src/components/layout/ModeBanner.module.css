@@ -1,0 +1,22 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 7px 16px;
+  background: #fff4d6;
+  border-bottom: 1px solid #e8c766;
+  color: #5c4300;
+  font-size: var(--fs-sm);
+}
+.banner strong {
+  letter-spacing: 0.06em;
+}
+.banner span {
+  min-width: 0;
+  flex: 1;
+}
+.banner a {
+  color: inherit;
+  font-weight: 600;
+}

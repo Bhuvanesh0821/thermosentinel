@@ -1,0 +1,213 @@
+.bar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 14px 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 20;
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  color: inherit;
+}
+.brand:hover {
+  text-decoration: none;
+}
+.brandText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.brandName {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.brandSub {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+}
+
+.region {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  flex: none;
+}
+.regionLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.regionName {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.statusMain {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.statusMeta {
+  white-space: nowrap;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.statusMeta b {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.iconAction {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-2);
+  transition: background 0.12s var(--ease), color 0.12s var(--ease);
+}
+.iconAction:hover,
+.iconAction[aria-expanded='true'] {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.count {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--p-critical);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  margin: 0 8px;
+}
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 6px;
+  border-radius: var(--radius);
+}
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #dbe3f3;
+  color: #1c3170;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.profileText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.profileName {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.profileRole {
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.popWrap {
+  position: relative;
+}
+
+.spin {
+  animation: ts-spin 0.9s linear infinite;
+}
+
+@media (max-width: 1500px) {
+  .statusMeta,
+  .profileText {
+    display: none;
+  }
+}
+@media (max-width: 1180px) {
+  .region,
+  .brandText {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .brandSub,
+  .divider,
+  .statusChip {
+    display: none;
+  }
+  .bar {
+    gap: 10px;
+    padding: 0 8px 0 12px;
+  }
+}

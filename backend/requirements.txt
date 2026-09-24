@@ -1,0 +1,33 @@
+# ThermoSentinel backend runtime dependencies.
+# Pinned to the versions the test suite was run with (Python 3.14), so local, CI and the
+# production container resolve identically. Upgrade deliberately, then re-run the tests.
+
+# API
+fastapi==0.141.1
+starlette==1.7.0
+uvicorn==0.53.0
+httptools==0.8.0
+uvloop==0.22.1; sys_platform != "win32"
+websockets==17.1
+watchfiles==1.3.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+python-dotenv==1.2.3
+
+# Database (Neon PostgreSQL + PostGIS)
+SQLAlchemy==2.0.54
+psycopg==3.3.6
+psycopg-binary==3.3.6
+
+# Ingestion / scheduling
+httpx==0.28.1
+APScheduler==3.11.3
+
+# Data / analytics
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+shapely==2.1.2
+
+# Land cover (ESA WorldCover COG sampling)
+rasterio==1.5.1

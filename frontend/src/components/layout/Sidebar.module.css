@@ -1,0 +1,120 @@
+.nav {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 10;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.item {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-3);
+  transition: background 0.12s var(--ease), color 0.12s var(--ease);
+}
+.item:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  text-decoration: none;
+}
+.item[aria-current='page'],
+.item:global(.active) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.item[aria-current='page']::before,
+.item:global(.active)::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+.label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.badge {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--p-high);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+@media (max-width: 760px) {
+  .nav {
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 0 6px;
+    border-right: 0;
+    border-top: 1px solid var(--border);
+  }
+  .list {
+    flex-direction: row;
+    gap: 2px;
+  }
+  .bottom {
+    margin-top: 0;
+    flex-direction: row;
+  }
+  .desktopOnly {
+    display: none;
+  }
+  .label {
+    font-size: 9.5px;
+  }
+  .item[aria-current='page']::before,
+.item:global(.active)::before {
+    left: 10px;
+    right: 10px;
+    top: -6px;
+    bottom: auto;
+    width: auto;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+  }
+}

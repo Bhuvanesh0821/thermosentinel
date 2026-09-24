@@ -1,0 +1,15 @@
+# Never send secrets or local artefacts into a build context.
+.env
+.env.*
+!.env.example
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+frontend/dist
+.git
+.github
+.pytest_cache
+tests
+docs
+ml

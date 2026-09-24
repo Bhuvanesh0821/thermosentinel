@@ -1,0 +1,221 @@
+.page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 18px 24px;
+}
+.split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail-w);
+  gap: 12px;
+  padding: 12px;
+}
+.splitMain {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+.splitSide {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.subtitle {
+  margin: 3px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  max-width: 70ch;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+.tableCard {
+  overflow: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-muted);
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--divider);
+  vertical-align: middle;
+}
+.table tbody tr {
+  cursor: pointer;
+  transition: background 0.1s var(--ease);
+}
+.table tbody tr:hover {
+  background: var(--surface-hover);
+}
+.table tbody tr[aria-selected='true'] {
+  background: var(--accent-soft);
+}
+.table tr:last-child td {
+  border-bottom: 0;
+}
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+.nowrap {
+  white-space: nowrap;
+}
+.muted {
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+}
+.strong {
+  font-weight: 600;
+}
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--divider);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+.search {
+  height: 30px;
+  width: 240px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+}
+.search:focus {
+  outline: 2px solid var(--accent-ring);
+  border-color: var(--accent);
+}
+.sideEmpty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+@media (max-width: 1100px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+    overflow: auto;
+  }
+  .splitSide {
+    min-height: 480px;
+  }
+}
+
+/* Stage 2 shared page pieces */
+.stack {
+  display: grid;
+  gap: 10px;
+}
+.tableToolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--divider);
+}
+.searchWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-3);
+}
+.searchWrap .search {
+  border: 0;
+  height: 28px;
+  width: 220px;
+  padding-left: 0;
+}
+.searchWrap .search:focus {
+  outline: none;
+}
+.searchWrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+[data-refreshing='true'] .table {
+  opacity: 0.6;
+  transition: opacity 0.15s var(--ease);
+}
+.table tbody tr:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1100px) {
+  .grid2,
+  .grid3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.wideCell {
+  min-width: 280px;
+}

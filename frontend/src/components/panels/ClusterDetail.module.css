@@ -1,0 +1,371 @@
+.detail {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.back {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-2);
+}
+.back:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.headText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.kicker {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.incRef {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.pad {
+  padding: 12px;
+}
+
+.summary {
+  display: flex;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  border-bottom: 1px solid var(--divider);
+  position: relative;
+}
+.summary::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--tone);
+}
+.summaryMain {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+.clsLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-lg);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.clsSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.location {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+.score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding-left: 12px;
+  border-left: 1px solid var(--divider);
+  flex: none;
+}
+.scoreValue {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.scoreMax {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+.incidentBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--divider);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+.section {
+  padding: 14px;
+  border-bottom: 1px solid var(--divider);
+}
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.engine {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-4);
+}
+.muted {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.bullets {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 5px;
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+.hypotheses {
+  margin-top: 8px;
+  color: var(--text-2);
+}
+.hypotheses b {
+  font-weight: 600;
+  color: var(--accent);
+}
+.caveats {
+  margin-top: 8px;
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+}
+
+.factors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.factor {
+  display: grid;
+  gap: 4px;
+}
+.factor[data-available='false'] {
+  opacity: 0.6;
+}
+.factorTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+.factorLabel {
+  font-weight: 600;
+}
+.factorPts {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.factorValue {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+.factorWeight {
+  color: var(--text-4);
+}
+
+.facilities {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.facility {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.rank {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  font-size: 10.5px;
+  color: var(--text-2);
+  flex: none;
+}
+.facilityMain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.facilityName {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.facilityMeta {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.facilityDist {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: var(--fs-sm);
+  flex: none;
+}
+.relationship {
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+.osm {
+  color: var(--text-3);
+  display: grid;
+  place-items: center;
+}
+.osm:hover {
+  color: var(--accent);
+}
+
+.lc {
+  display: grid;
+  gap: 8px;
+}
+.lcBar {
+  display: flex;
+  height: 12px;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(13, 23, 38, 0.08);
+}
+.lcBar span {
+  height: 100%;
+}
+.lcList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+  font-size: var(--fs-xs);
+}
+.lcList li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.lcList li > :last-child {
+  margin-left: auto;
+  color: var(--text-2);
+}
+.lcSwatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(13, 23, 38, 0.12);
+}
+.provenance {
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--text-4);
+}
+
+.tableWrap {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: auto;
+  max-height: 260px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-xs);
+}
+.table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-muted);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-3);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--divider);
+  white-space: nowrap;
+}
+.table tr:last-child td {
+  border-bottom: 0;
+}
+.num {
+  text-align: right;
+}
+.footer {
+  padding: 12px 14px 16px;
+  font-size: 10.5px;
+  color: var(--text-4);
+  line-height: 1.5;
+}
+
+.alternatives {
+  margin-top: 8px;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+.alternatives summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.alternatives ul {
+  margin-top: 6px;
+}

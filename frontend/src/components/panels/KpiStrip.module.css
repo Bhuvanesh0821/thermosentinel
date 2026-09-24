@@ -1,0 +1,115 @@
+.strip {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(5, minmax(0, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.errorStrip {
+  display: block;
+}
+.kpi {
+  position: relative;
+  padding: 10px 14px 10px;
+  min-width: 0;
+  border-left: 1px solid var(--divider);
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.kpiText {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.kpi[data-wide='true'] .kpiText {
+  flex: 1 1 auto;
+}
+.kpiChart {
+  flex: 0 0 46%;
+  max-width: 240px;
+  margin-bottom: 3px;
+}
+.kpi:first-child {
+  border-left: 0;
+}
+.kpi[data-tone]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 2px;
+}
+.kpi[data-tone='critical']::before {
+  background: var(--p-critical);
+}
+.kpi[data-tone='high']::before {
+  background: var(--p-high);
+}
+.kpi[data-tone='medium']::before {
+  background: var(--p-medium);
+}
+.label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.value {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 2px 0 1px;
+  color: var(--text);
+  letter-spacing: -0.025em;
+}
+/* Wraps to at most two lines rather than truncating on narrower screens. */
+.sub {
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+  color: var(--text-3);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 1400px) {
+  .value {
+    font-size: var(--fs-xl);
+  }
+}
+@media (max-width: 1100px) {
+  .strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .kpiChart {
+    display: none;
+  }
+  .kpi:nth-child(4) {
+    border-left: 0;
+  }
+  .kpi:nth-child(n + 4) {
+    border-top: 1px solid var(--divider);
+  }
+}
+@media (max-width: 560px) {
+  .strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .kpi:nth-child(odd) {
+    border-left: 0;
+  }
+  .kpi:nth-child(4) {
+    border-left: 1px solid var(--divider);
+  }
+  .kpi:nth-child(n + 3) {
+    border-top: 1px solid var(--divider);
+  }
+}
