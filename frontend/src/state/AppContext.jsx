@@ -28,7 +28,9 @@ export const DEFAULT_FILTERS = {
   classification: [],
   facilityType: [],
   persistence: [],
-  area: 'india', // 'india' | 'view'
+  area: 'india', // 'india' | 'view' | 'place'
+  placeBbox: null, // [west, south, east, north] when area === 'place' (e.g. a state named by voice)
+  placeName: null,
 };
 
 /** Map shared filters onto API query parameters (only the ones each endpoint understands). */
@@ -39,7 +41,12 @@ export function filterParams(filters, mapBounds, { detection = false } = {}) {
     facility_type: filters.facilityType.length ? filters.facilityType.join(',') : undefined,
     persistence: filters.persistence.length ? filters.persistence.join(',') : undefined,
     confidence: filters.confidence || undefined,
-    bbox: filters.area === 'view' && mapBounds ? mapBounds : undefined,
+    bbox:
+      filters.area === 'view' && mapBounds
+        ? mapBounds
+        : filters.area === 'place' && filters.placeBbox
+          ? filters.placeBbox.map((v) => Number(v).toFixed(4)).join(',')
+          : undefined,
   };
   if (detection) {
     Object.assign(p, {
@@ -72,6 +79,7 @@ export function AppProvider({ children }) {
   const [mapBounds, setMapBounds] = useState(null);
   const [selection, setSelection] = useState(null); // { type: 'cluster' | 'facility', id, incidentId?, lon?, lat? }
   const [mapFocus, setMapFocus] = useState(null);
+  const [mapCommand, setMapCommand] = useState(null); // { basemap?, layers?, key } - e.g. from a voice command
   const [refreshKey, setRefreshKey] = useState(0);
   const [stream, setStream] = useState({ status: 'connecting', transport: null, lastEvent: null, lastEventAt: null });
   const [pipeline, setPipeline] = useState({ running: false, job: null, progress: null });
@@ -93,7 +101,8 @@ export function AppProvider({ children }) {
   }, []);
   const dismissToast = useCallback((id) => setToasts((list) => list.filter((t) => t.id !== id)), []);
 
-  const focusMap = useCallback((lon, lat, zoom = 11) => setMapFocus({ lon, lat, zoom, key: Date.now() }), []);
+  const focusMap = useCallback((lon, lat, zoom = 11, bbox = null) => setMapFocus({ lon, lat, zoom, bbox, key: Date.now() }), []);
+  const sendMapCommand = useCallback((cmd) => setMapCommand(cmd ? { ...cmd, key: Date.now() } : null), []);
 
   const setBrowserNotify = useCallback((on) => {
     notifyRef.current = on;
@@ -115,7 +124,12 @@ export function AppProvider({ children }) {
       if (DATA_EVENTS.has(type)) refresh();
       if (type === 'alert.created' || type === 'alert.escalated') {
         const title = type === 'alert.created' ? 'New alert' : 'Alert escalated';
-        pushToast({ tone: payload.severity || 'medium', title, body: payload.title, link: payload.incident_id ? `/investigation/${payload.incident_id}` : '/alerts' });
+        pushToast({
+          tone: payload.severity || 'medium',
+          title,
+          body: payload.title,
+          link: payload.incident_id ? `/investigation/${payload.incident_id}` : '/alerts',
+        });
         if (notifyRef.current && 'Notification' in window && Notification.permission === 'granted') {
           try {
             const n = new Notification(`ThermoSentinel · ${title} (${payload.severity})`, {
@@ -160,10 +174,22 @@ export function AppProvider({ children }) {
       es.onopen = () => connected('sse');
       es.onerror = () => setStream((s) => ({ ...s, status: es.readyState === 2 ? 'offline' : 'reconnecting' }));
       const names = [
-        'hello', 'pipeline.started', 'pipeline.completed', 'analysis.completed', 'analysis.failed',
-        'ingestion.firms.completed', 'ingestion.firms.failed', 'ingestion.facilities.completed',
-        'ingestion.facilities.progress', 'ingestion.facilities.failed', 'alert.created', 'alert.escalated',
-        'alert.acknowledged', 'alert.resolved', 'maintenance.retention', 'region.updated',
+        'hello',
+        'pipeline.started',
+        'pipeline.completed',
+        'analysis.completed',
+        'analysis.failed',
+        'ingestion.firms.completed',
+        'ingestion.firms.failed',
+        'ingestion.facilities.completed',
+        'ingestion.facilities.progress',
+        'ingestion.facilities.failed',
+        'alert.created',
+        'alert.escalated',
+        'alert.acknowledged',
+        'alert.resolved',
+        'maintenance.retention',
+        'region.updated',
       ];
       names.forEach((n) =>
         es.addEventListener(n, (e) => {
@@ -223,10 +249,46 @@ export function AppProvider({ children }) {
 
   const value = useMemo(
     () => ({
-      filters, setFilters, mapBounds, setMapBounds, selection, setSelection, mapFocus, focusMap, refreshKey, refresh,
-      stream, pipeline, setPipeline, toasts, pushToast, dismissToast, browserNotify, setBrowserNotify, navigateRef,
+      filters,
+      setFilters,
+      mapBounds,
+      setMapBounds,
+      selection,
+      setSelection,
+      mapFocus,
+      focusMap,
+      mapCommand,
+      sendMapCommand,
+      refreshKey,
+      refresh,
+      stream,
+      pipeline,
+      setPipeline,
+      toasts,
+      pushToast,
+      dismissToast,
+      browserNotify,
+      setBrowserNotify,
+      navigateRef,
     }),
-    [filters, mapBounds, selection, mapFocus, focusMap, refreshKey, refresh, stream, pipeline, toasts, pushToast, dismissToast, browserNotify, setBrowserNotify],
+    [
+      filters,
+      mapBounds,
+      selection,
+      mapFocus,
+      focusMap,
+      mapCommand,
+      sendMapCommand,
+      refreshKey,
+      refresh,
+      stream,
+      pipeline,
+      toasts,
+      pushToast,
+      dismissToast,
+      browserNotify,
+      setBrowserNotify,
+    ],
   );
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

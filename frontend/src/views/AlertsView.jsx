@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BellRing, Check, ChevronDown, CircleCheck, FileSearch, Search } from 'lucide-react';
 import { api } from '../api/client.js';
 import { PriorityBadge } from '../components/common/Badges.jsx';
@@ -73,9 +73,15 @@ function AlertEvidence({ alertId }) {
 export default function AlertsView() {
   const navigate = useNavigate();
   const { pushToast } = useApp();
+  const [params] = useSearchParams();
   const [status, setStatus] = useState('open');
-  const [severity, setSeverity] = useState(null);
-  const [rule, setRule] = useState(null);
+  const [severity, setSeverity] = useState(params.get('severity'));
+  const [rule, setRule] = useState(params.get('rule'));
+  // Links (e.g. from a voice command) can pre-select severity / rule.
+  useEffect(() => {
+    if (params.has('severity')) setSeverity(params.get('severity') || null);
+    if (params.has('rule')) setRule(params.get('rule') || null);
+  }, [params]);
   const [query, setQuery] = useState('');
   const [q, setQ] = useState('');
   const [offset, setOffset] = useState(0);

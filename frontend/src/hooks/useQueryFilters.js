@@ -21,9 +21,26 @@ export function useQueryFilters() {
     if (q.has('facility_type')) next.facilityType = LIST(q.get('facility_type'));
     if (q.has('persistence')) next.persistence = LIST(q.get('persistence'));
     if (q.has('confidence')) next.confidence = q.get('confidence') || null;
+    if (q.has('daynight')) next.daynight = ['D', 'N'].includes(q.get('daynight')) ? q.get('daynight') : null;
+    if (q.has('bbox')) {
+      const bb = q.get('bbox').split(',').map(Number);
+      if (bb.length === 4 && bb.every(Number.isFinite))
+        Object.assign(next, { area: 'place', placeBbox: bb, placeName: q.get('place') || 'Selected area' });
+    }
     if (Object.keys(next).length) {
       // A command/link defines the whole filter state it cares about.
-      setFilters((f) => ({ ...f, minPriority: null, classification: [], facilityType: [], persistence: [], ...next }));
+      setFilters((f) => ({
+        ...f,
+        minPriority: null,
+        classification: [],
+        facilityType: [],
+        persistence: [],
+        daynight: null,
+        area: 'india',
+        placeBbox: null,
+        placeName: null,
+        ...next,
+      }));
     }
   }, [search, setFilters]);
 }

@@ -123,7 +123,12 @@ def _nominatim(settings, q: str) -> tuple:
         timeout=10,
     )
     r.raise_for_status()
-    return tuple((float(x["lat"]), float(x["lon"]), x.get("display_name", q), x.get("addresstype") or x.get("type")) for x in r.json())
+    out = []
+    for x in r.json():
+        bb = x.get("boundingbox")  # [south, north, west, east] as strings
+        bbox = (float(bb[2]), float(bb[0]), float(bb[3]), float(bb[1])) if bb and len(bb) == 4 else None
+        out.append((float(x["lat"]), float(x["lon"]), x.get("display_name", q), x.get("addresstype") or x.get("type"), bbox))
+    return tuple(out)
 
 
 def _photon(settings, q: str) -> tuple:
@@ -141,7 +146,9 @@ def _photon(settings, q: str) -> tuple:
         lon, lat = f["geometry"]["coordinates"][:2]
         parts = [props.get("name"), props.get("county"), props.get("state"), props.get("country")]
         label = ", ".join(dict.fromkeys(p for p in parts if p)) or q
-        out.append((float(lat), float(lon), label, props.get("type")))
+        ext = props.get("extent")  # [west, north, east, south]
+        bbox = (float(ext[0]), float(ext[3]), float(ext[2]), float(ext[1])) if ext and len(ext) == 4 else None
+        out.append((float(lat), float(lon), label, props.get("type"), bbox))
     return tuple(out)
 
 
@@ -186,10 +193,11 @@ def search_locations(q: str, limit: int) -> list[dict]:
     if not settings.geocoder_enabled or len(q.strip()) < 3:
         return []
     out = []
-    for lat, lon, name, kind in _geocode(q.strip().lower()):
+    for lat, lon, name, kind, bbox in _geocode(q.strip().lower()):
         if area.contains(lat, lon):
             zoom = {"city": 10, "town": 11, "village": 12, "state": 6, "district": 8}.get(kind or "", 10)
-            out.append({"kind": "location", "label": name.split(",")[0], "detail": name, "lat": lat, "lon": lon, "zoom": zoom})
+            out.append({"kind": "location", "label": name.split(",")[0], "detail": name, "lat": lat, "lon": lon, "zoom": zoom,
+                        "place_type": kind, "bbox": list(bbox) if bbox else None})
         if len(out) >= limit:
             break
     return out

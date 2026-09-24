@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AttributionControl, Map as MlMap, NavigationControl, Popup, ScaleControl, prewarm, setWorkerCount, setWorkerUrl } from 'maplibre-gl';
+import {
+  AttributionControl,
+  Map as MlMap,
+  NavigationControl,
+  Popup,
+  ScaleControl,
+  prewarm,
+  setWorkerCount,
+  setWorkerUrl,
+} from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { api } from '../../api/client.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -47,7 +56,7 @@ const DEFAULT_LAYERS = {
 const FOOTPRINT_MIN_ZOOM = 9;
 
 export default function ThermalMap() {
-  const { filters, selection, setSelection, mapFocus, setMapBounds } = useApp();
+  const { filters, selection, setSelection, mapFocus, setMapBounds, mapCommand, sendMapCommand } = useApp();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const popupRef = useRef(null);
@@ -84,7 +93,11 @@ export default function ThermalMap() {
     [filters],
   );
   const hotspots = useApi('/api/hotspots', obsParams, { enabled: layers.hotspots || layers.heat });
-  const clusters = useApi('/api/clusters', { format: 'geojson', hours: filters.hours, limit: 10000, ...shared }, { enabled: layers.clusters });
+  const clusters = useApi(
+    '/api/clusters',
+    { format: 'geojson', hours: filters.hours, limit: 10000, ...shared },
+    { enabled: layers.clusters },
+  );
   const facilities = useApi(
     '/api/facilities',
     { format: 'geojson', limit: 20000, type: filters.facilityType.length ? filters.facilityType.join(',') : undefined },
@@ -258,7 +271,13 @@ export default function ThermalMap() {
       if (incident) {
         setSelection({ type: 'cluster', id: incident.properties.cluster_id, incidentId: incident.properties.id });
       } else if (hotspot) {
-        openPopup(ev.lngLat, hotspotPopup(hotspot.properties, hotspot.geometry.coordinates ? { lng: hotspot.geometry.coordinates[0], lat: hotspot.geometry.coordinates[1] } : ev.lngLat));
+        openPopup(
+          ev.lngLat,
+          hotspotPopup(
+            hotspot.properties,
+            hotspot.geometry.coordinates ? { lng: hotspot.geometry.coordinates[0], lat: hotspot.geometry.coordinates[1] } : ev.lngLat,
+          ),
+        );
       } else if (cluster) {
         setSelection({ type: 'cluster', id: cluster.properties.id });
       } else if (facilityGroup) {
@@ -279,7 +298,19 @@ export default function ThermalMap() {
         api
           .get(`/api/facilities/${footprint.properties.id}`)
           .then(({ data }) =>
-            openPopup(ev.lngLat, facilityPopup({ ...data, type: data.facility_type, type_label: data.facility_type_label, subtype: data.facility_subtype, has_footprint: true }, { lng: data.longitude, lat: data.latitude })),
+            openPopup(
+              ev.lngLat,
+              facilityPopup(
+                {
+                  ...data,
+                  type: data.facility_type,
+                  type_label: data.facility_type_label,
+                  subtype: data.facility_subtype,
+                  has_footprint: true,
+                },
+                { lng: data.longitude, lat: data.latitude },
+              ),
+            ),
           )
           .catch(() => {});
       }
@@ -403,8 +434,28 @@ export default function ThermalMap() {
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map || !mapFocus) return;
-    map.flyTo({ center: [mapFocus.lon, mapFocus.lat], zoom: Math.max(map.getZoom(), mapFocus.zoom), speed: 1.5, essential: true });
+    if (mapFocus.bbox) {
+      // A named area (state, city): show all of it, zooming out if needed.
+      const [w, s, e, n] = mapFocus.bbox;
+      map.fitBounds(
+        [
+          [w, s],
+          [e, n],
+        ],
+        { padding: 40, maxZoom: 12, duration: 1400, essential: true },
+      );
+    } else {
+      map.flyTo({ center: [mapFocus.lon, mapFocus.lat], zoom: Math.max(map.getZoom(), mapFocus.zoom), speed: 1.5, essential: true });
+    }
   }, [mapFocus, ready]);
+
+  // Commands from elsewhere in the app (voice): switch basemap, turn layers on. Applied once.
+  useEffect(() => {
+    if (!mapCommand) return;
+    if (mapCommand.basemap) setBasemap(mapCommand.basemap);
+    if (mapCommand.layers) setLayers((l) => ({ ...l, ...mapCommand.layers }));
+    sendMapCommand(null);
+  }, [mapCommand]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const map = mapRef.current;
@@ -415,9 +466,13 @@ export default function ThermalMap() {
       if (f) point = f.geometry.coordinates;
     }
     if (!point && selection?.lon != null) point = [selection.lon, selection.lat];
-    map.getSource('selection')?.setData(
-      point ? { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: point }, properties: {} }] } : EMPTY_FC,
-    );
+    map
+      .getSource('selection')
+      ?.setData(
+        point
+          ? { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: point }, properties: {} }] }
+          : EMPTY_FC,
+      );
   }, [selection, clusters.data, ready]);
 
   // ----------------------------------------------------------------- render
@@ -487,13 +542,20 @@ export default function ThermalMap() {
           )}
           {hotspots.meta?.truncated && (
             <div className={s.banner} role="status">
-              Showing the {hotspots.data.features.length.toLocaleString()} most intense of {hotspots.meta.total.toLocaleString()} detections.
-              Raise the minimum FRP or shorten the window to see all.
+              Showing the {hotspots.data.features.length.toLocaleString()} most intense of {hotspots.meta.total.toLocaleString()}{' '}
+              detections. Raise the minimum FRP or shorten the window to see all.
             </div>
           )}
         </div>
       )}
-      <LayerPanel layers={layers} setLayers={setLayers} basemap={basemap} setBasemap={setBasemap} basemaps={config.data?.basemaps || []} states={layerStates} />
+      <LayerPanel
+        layers={layers}
+        setLayers={setLayers}
+        basemap={basemap}
+        setBasemap={setBasemap}
+        basemaps={config.data?.basemaps || []}
+        states={layerStates}
+      />
       <MapFilters />
       <MapLegend layers={layers} landCoverClasses={config.data?.land_cover_classes || []} />
       {ready && <CoordinateReadout map={mapRef.current} />}

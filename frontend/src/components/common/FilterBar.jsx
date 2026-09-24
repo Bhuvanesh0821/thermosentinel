@@ -31,12 +31,24 @@ const PERSISTENCE_OPTIONS = [
 /**
  * One filter row above the content it scopes (map + panels). `fields` limits which controls show.
  */
-export default function FilterBar({ fields = ['hours', 'severity', 'event', 'facility', 'persistence', 'confidence', 'area'], windows = WINDOW_OPTIONS, trailing }) {
+export default function FilterBar({
+  fields = ['hours', 'severity', 'event', 'facility', 'persistence', 'confidence', 'area'],
+  windows = WINDOW_OPTIONS,
+  trailing,
+}) {
   const { filters, setFilters } = useApp();
   const set = (key) => (value) => setFilters((f) => ({ ...f, [key]: value }));
   const has = (k) => fields.includes(k);
   const dirty = fields.some((k) => {
-    const map = { hours: 'hours', severity: 'minPriority', event: 'classification', facility: 'facilityType', persistence: 'persistence', confidence: 'confidence', area: 'area' };
+    const map = {
+      hours: 'hours',
+      severity: 'minPriority',
+      event: 'classification',
+      facility: 'facilityType',
+      persistence: 'persistence',
+      confidence: 'confidence',
+      area: 'area',
+    };
     return JSON.stringify(filters[map[k]]) !== JSON.stringify(DEFAULT_FILTERS[map[k]]);
   });
 
@@ -48,7 +60,12 @@ export default function FilterBar({ fields = ['hours', 'severity', 'event', 'fac
           label="Minimum severity"
           value={filters.minPriority}
           onChange={set('minPriority')}
-          options={[{ value: null, label: 'Any severity' }, ...PRIORITY_ORDER.slice().reverse().map((p) => ({ value: p, label: `${PRIORITY[p].label}${p === 'critical' ? '' : ' +'}` }))]}
+          options={[
+            { value: null, label: 'Any severity' },
+            ...PRIORITY_ORDER.slice()
+              .reverse()
+              .map((p) => ({ value: p, label: `${PRIORITY[p].label}${p === 'critical' ? '' : ' +'}` })),
+          ]}
         />
       )}
       {has('event') && (
@@ -60,8 +77,12 @@ export default function FilterBar({ fields = ['hours', 'severity', 'event', 'fac
           options={Object.entries(CLASSIFICATION).map(([value, c]) => ({ value, label: c.label, color: c.color }))}
         />
       )}
-      {has('facility') && <MultiSelect label="Facility" value={filters.facilityType} onChange={set('facilityType')} options={FACILITY_OPTIONS} />}
-      {has('persistence') && <MultiSelect label="Persistence" value={filters.persistence} onChange={set('persistence')} options={PERSISTENCE_OPTIONS} />}
+      {has('facility') && (
+        <MultiSelect label="Facility" value={filters.facilityType} onChange={set('facilityType')} options={FACILITY_OPTIONS} />
+      )}
+      {has('persistence') && (
+        <MultiSelect label="Persistence" value={filters.persistence} onChange={set('persistence')} options={PERSISTENCE_OPTIONS} />
+      )}
       {has('confidence') && (
         <Select
           label="Minimum detection confidence"
@@ -80,16 +101,22 @@ export default function FilterBar({ fields = ['hours', 'severity', 'event', 'fac
           options={[
             { value: 'india', label: 'All India' },
             { value: 'view', label: 'Map view' },
+            ...(filters.area === 'place' && filters.placeName ? [{ value: 'place', label: filters.placeName }] : []),
           ]}
           value={filters.area}
-          onChange={set('area')}
+          onChange={(v) => setFilters((f) => ({ ...f, area: v, ...(v === 'place' ? {} : { placeBbox: null, placeName: null }) }))}
         />
       )}
       {dirty && (
         <button
           type="button"
           className={s.reset}
-          onClick={() => setFilters((f) => ({ ...f, ...Object.fromEntries(Object.entries(DEFAULT_FILTERS).filter(([k]) => !['minFrp', 'instrument', 'daynight'].includes(k))) }))}
+          onClick={() =>
+            setFilters((f) => ({
+              ...f,
+              ...Object.fromEntries(Object.entries(DEFAULT_FILTERS).filter(([k]) => !['minFrp', 'instrument'].includes(k))),
+            }))
+          }
           title="Reset filters"
         >
           <RotateCcw size={13} /> Reset

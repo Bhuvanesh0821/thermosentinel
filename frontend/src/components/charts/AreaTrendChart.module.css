@@ -32,9 +32,9 @@
 .badge {
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid #9fd9c4;
-  background: #e8f7f1;
-  color: #11734f;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--text-2);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -50,30 +50,32 @@
 }
 .ranges {
   display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
 }
 .range {
-  padding: 5px 12px;
+  height: 26px;
+  padding: 0 11px;
   border: 0;
-  border-left: 1px solid var(--border);
-  background: var(--surface);
-  font-size: var(--fs-sm);
+  border-radius: 4px;
+  background: transparent;
+  font-size: var(--fs-xs);
+  font-weight: 600;
   color: var(--text-2);
+  white-space: nowrap;
   cursor: pointer;
   transition: background 0.12s var(--ease), color 0.12s var(--ease);
 }
-.range:first-child {
-  border-left: 0;
-}
 .range:hover {
-  background: var(--surface-hover);
+  color: var(--text);
 }
 .range[aria-pressed='true'] {
-  background: #0f4c3a;
-  color: #fff;
-  font-weight: 600;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-1);
 }
 .range:focus-visible,
 .viewBtn:focus-visible {
@@ -83,8 +85,8 @@
 .viewBtn {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
