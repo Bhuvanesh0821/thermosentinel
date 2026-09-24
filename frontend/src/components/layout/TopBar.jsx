@@ -119,14 +119,6 @@ export default function TopBar() {
       <div className={s.actions}>
         <VoiceControl />
         <Notifications />
-        <div className={s.divider} />
-        <div className={s.profile} title="Authentication is planned for Stage 3">
-          <span className={s.avatar}>OP</span>
-          <span className={s.profileText}>
-            <span className={s.profileName}>Operator</span>
-            <span className={s.profileRole}>Local session</span>
-          </span>
-        </div>
       </div>
     </header>
   );

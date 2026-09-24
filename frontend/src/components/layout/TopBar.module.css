@@ -141,44 +141,6 @@
   text-align: center;
   box-shadow: 0 0 0 2px var(--surface);
 }
-.divider {
-  width: 1px;
-  height: 22px;
-  background: var(--border);
-  margin: 0 8px;
-}
-.profile {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 3px 6px;
-  border-radius: var(--radius);
-}
-.avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #dbe3f3;
-  color: #1c3170;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-.profileText {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-.profileName {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-}
-.profileRole {
-  font-size: 10.5px;
-  color: var(--text-3);
-}
 
 .popWrap {
   position: relative;
@@ -189,8 +151,7 @@
 }
 
 @media (max-width: 1500px) {
-  .statusMeta,
-  .profileText {
+  .statusMeta {
     display: none;
   }
 }
@@ -202,7 +163,6 @@
 }
 @media (max-width: 760px) {
   .brandSub,
-  .divider,
   .statusChip {
     display: none;
   }
