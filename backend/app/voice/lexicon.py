@@ -390,6 +390,14 @@ def when_text(hours: int, lang: str) -> str:
     return {"en": f"in the last {hours} hours", "hi": f"पिछले {hours} घंटों में", "ta": f"கடந்த {hours} மணி நேரத்தில்"}[lang]
 
 
+def window_label(hours: int, lang: str) -> str:
+    """Short label: 'last 7 days' / 'पिछले 7 दिन' / 'கடந்த 7 நாட்கள்'."""
+    if hours % 24 == 0 and hours >= 48:
+        n = hours // 24
+        return {"en": f"last {n} days", "hi": f"पिछले {n} दिन", "ta": f"கடந்த {n} நாட்கள்"}[lang]
+    return {"en": f"last {hours} hours", "hi": f"पिछले {hours} घंटे", "ta": f"கடந்த {hours} மணி நேரம்"}[lang]
+
+
 def area_text(place: str, lang: str) -> str:
     return {"en": f" in the {place} area", "hi": f" {place} क्षेत्र में", "ta": f" {place} பகுதியில்"}[lang]
 

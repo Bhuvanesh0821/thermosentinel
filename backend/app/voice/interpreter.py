@@ -100,7 +100,7 @@ def _chips(cmd: ParsedCommand, lang: str, place: dict | None = None, near: bool 
     if cmd.daynight:
         out.append(L.NIGHT_TEXT[lang][cmd.daynight])
     if cmd.hours:
-        out.append(L.when_text(cmd.hours, lang).replace("in the ", "").replace(" में", "").replace("த்தில்", "ம்"))
+        out.append(L.window_label(cmd.hours, lang))
     return out
 
 
@@ -290,7 +290,7 @@ _EVENT_JOINS = """LEFT JOIN incidents i ON i.cluster_id = c.id
 
 
 def top_event(conn: Connection, cmd: ParsedCommand, place: dict | None, order: str) -> dict | None:
-    params: dict = {"h": cmd.hours or 168 * 4}
+    params: dict = {"h": cmd.hours or 168}
     sql = (f"SELECT {_EVENT_COLUMNS} FROM thermal_clusters c {_EVENT_JOINS} "
            "WHERE c.status = 'active' AND c.end_time >= now() - make_interval(hours => :h)")
     sql += _bbox_sql("c.center_latitude", "c.center_longitude", place, params) + _cluster_filter_sql(cmd, params)
@@ -415,7 +415,7 @@ def interpret(raw: str, conn: Connection, lang: str | None = None) -> Interpreta
                         selection={"type": "cluster", "id": ev["id"], "incidentId": ev["incident_id"]})
         if biggest:
             where = L.area_text(place["name"], lg) if place else ""
-            answer = _t("hottest", lg, when=L.when_text(cmd.hours or 168 * 4, lg), where=where, label=label, at=at,
+            answer = _t("hottest", lg, when=L.when_text(cmd.hours or 168, lg), where=where, label=label, at=at,
                         frp=f"{ev['max_frp'] or 0:.1f}")
         else:
             answer = _t("latest_event", lg, label=label, at=at)
