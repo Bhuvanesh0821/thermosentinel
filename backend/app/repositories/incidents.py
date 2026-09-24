@@ -286,7 +286,7 @@ def resolve_alert(conn: Connection, alert_id: int, note: str | None) -> dict | N
     row = conn.execute(
         text(
             "UPDATE alerts SET status = 'resolved', resolved_at = coalesce(resolved_at, now()), "
-            "resolution = coalesce(:note, 'Resolved by operator') "
+            "resolution = coalesce(:note, 'Resolved by operator'), resolved_by = coalesce(resolved_by, 'operator') "
             "WHERE id = :id RETURNING id, status, resolved_at, resolution"
         ),
         {"id": alert_id, "note": note},

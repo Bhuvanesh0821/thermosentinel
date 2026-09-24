@@ -51,7 +51,7 @@ export const CLASSIFICATION = {
   mining_associated: { label: 'Mining-associated thermal activity', short: 'Mining-associated', color: '#1baf7a' },
   persistent_industrial_source: { label: 'Persistent industrial thermal source', short: 'Persistent industrial', color: '#2a78d6' },
   industrial_associated_event: { label: 'Industrial-associated thermal event', short: 'Industrial-associated', color: '#6da7ec' },
-  persistent_unattributed_source: { label: 'Persistent thermal source (no mapped facility)', short: 'Persistent (unmapped)', color: '#e87ba4' },
+  persistent_unattributed_source: { label: 'Persistent thermal source (no mapped facility)', short: 'Unmapped source', color: '#e87ba4' },
   agricultural_burning: { label: 'Possible agricultural burning', short: 'Agricultural?', color: '#eda100' },
   vegetation_fire: { label: 'Possible wildfire / vegetation fire', short: 'Vegetation fire?', color: '#008300' },
   unclassified_anomaly: { label: 'Unclassified thermal anomaly', short: 'Unclassified', color: '#97a1af' },

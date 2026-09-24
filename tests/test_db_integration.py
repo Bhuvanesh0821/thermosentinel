@@ -283,6 +283,19 @@ def test_stage2_endpoints(incident_ready):
         assert client.get("/api/alerts/999999999").status_code == 404
 
 
+def test_operator_resolution_is_not_re_raised(incident_ready):
+    """After an operator resolves an alert (previous test, via the API), the same evidence must
+    not raise a new alert for that incident."""
+    from app.alerts.service import update_incidents_and_alerts
+    from app.db.engine import connection
+
+    stats = update_incidents_and_alerts([incident_ready])
+    with connection() as conn:
+        rows = conn.execute(text("SELECT status, resolved_by FROM alerts WHERE cluster_id = :c ORDER BY id"), {"c": incident_ready}).all()
+    assert rows == [("resolved", "operator")]
+    assert stats["alerts_suppressed"] == 1 and stats["alerts_created"] == 0
+
+
 def test_incident_closes_when_event_no_longer_qualifies(incident_ready):
     """Re-analysis that drops an event below the incident criteria closes its incident and
     resolves its alert with the reason (instead of leaving a stale open incident)."""

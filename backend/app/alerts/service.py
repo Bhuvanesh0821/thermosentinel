@@ -75,7 +75,8 @@ def resolve_closed_incident_alerts(conn) -> list[dict]:
         text(
             """
             UPDATE alerts a SET status = 'resolved', resolved_at = now(),
-                   resolution = 'Auto-resolved: no detections at this location for 72 hours (incident closed)'
+                   resolution = 'Auto-resolved: no detections at this location for 72 hours (incident closed)',
+                   resolved_by = 'system'
               FROM incidents i
              WHERE a.incident_id = i.id AND i.status = 'closed' AND a.status <> 'resolved'
             RETURNING a.id, a.incident_id, a.severity, a.title
@@ -111,7 +112,7 @@ def close_disqualified_incidents(conn, settings: Settings) -> list[dict]:
              RETURNING i.id, i.classification, i.risk_score
             )
             UPDATE alerts a
-               SET status = 'resolved', resolved_at = now(),
+               SET status = 'resolved', resolved_at = now(), resolved_by = 'system',
                    resolution = 'Auto-resolved: after re-analysis the event no longer meets the incident criteria '
                                 || '(class ' || upd.classification || ', intelligence score '
                                 || round(upd.risk_score::numeric) || ')'
@@ -298,6 +299,21 @@ def update_incidents_and_alerts(cluster_ids: list[int], settings: Settings | Non
             ).mappings()
         }
 
+        # An operator's resolution is respected: no new alert for that incident for 7 days unless
+        # the evidence escalates above the severity they resolved.
+        operator_resolved = {
+            r["incident_id"]: r["severity"]
+            for r in conn.execute(
+                text(
+                    "SELECT DISTINCT ON (incident_id) incident_id, severity FROM alerts "
+                    "WHERE resolved_by = 'operator' AND resolved_at >= now() - interval '7 days' "
+                    "AND incident_id = ANY(CAST(:ids AS bigint[])) ORDER BY incident_id, resolved_at DESC"
+                ),
+                {"ids": [i["incident_id"] for i in open_incidents]},
+            ).mappings()
+        }
+        stats["alerts_suppressed"] = 0
+
         for inc in open_incidents:
             inc["facility_relevance"] = THERMAL_RELEVANCE.get(inc["facility_type"] or "", 0.0)
             inc["facility_distance_m"] = inc["nearest_facility_distance_m"]
@@ -314,6 +330,9 @@ def update_incidents_and_alerts(cluster_ids: list[int], settings: Settings | Non
             )
             evidence = json.dumps(_alert_evidence(inc, hits, severity), default=str)
             prev = existing.get(inc["incident_id"])
+            if prev is None and inc["incident_id"] in operator_resolved and RANK[severity] <= RANK[operator_resolved[inc["incident_id"]]]:
+                stats["alerts_suppressed"] += 1
+                continue
             if prev is None:
                 row = conn.execute(
                     text(
